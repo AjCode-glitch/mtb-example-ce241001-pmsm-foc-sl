@@ -78,24 +78,35 @@
 /*********************************************************************************************************************
  * MACROS
  ***************************************/
-#define  PMSM_FOC_HARDWARE_KIT                    KIT_XMC_IFI_24V_250W               /* 1. KIT_XMC13_AK_MOTOR_001
+#define  PMSM_FOC_HARDWARE_KIT                    KIT_XMC4400_EVAL_48V20A_GAN        /* F1 port: was KIT_XMC_IFI_24V_250W
+                                                                                        1. KIT_XMC13_AK_MOTOR_001
                                                                                         2. KIT_XMC14_AK_MOTOR_001
                                                                                         3. KIT_XMC_IFI_24V_250W
                                                                                         4. KIT_XMC4400_EXAGON
                                                                                         5. KIT_XMC4400_ISOLATED
+                                                                                        6. KIT_XMC4400_EVAL_48V20A_GAN (F1 port)
                                                                                         */
 /*      --------------------------------------------------- Current feedback Sensing Mechanism ---------------------------------------- */
 #define  CURRENT_SENSING                          USER_THREE_SHUNT_SYNC_CONV              /*1. USER_SINGLE_SHUNT_CONV
 
                                                                                             3. USER_THREE_SHUNT_SYNC_CONV*/
 /*      --------------------------------------------------- FOC Control and Startup Scheme (Only Select 1 Scheme at one time) ---------------------------------------- */
-#define MY_FOC_CONTROL_SCHEME                    SPEED_CONTROLLED_DIRECT_FOC           /*1. SPEED_CONTROLLED_VF_ONLY,
+/* F1 port: was SPEED_CONTROLLED_DIRECT_FOC. Open-loop V/F only until a motor and current feedback exist.
+   Never power the EVAL board with a closed-loop build (VF_MET_FOC or *_DIRECT_FOC) without a motor. */
+#define MY_FOC_CONTROL_SCHEME                    SPEED_CONTROLLED_VF_ONLY              /*1. SPEED_CONTROLLED_VF_ONLY,
                                                                                              2. SPEED_CONTROLLED_VF_MET_FOC
                                                                                              3. SPEED_CONTROLLED_DIRECT_FOC
                                                                                              4. TORQUE_CONTROLLED_DIRECT_FOC
                                                                                              5. VQ_CONTROLLED_DIRECT_FOC */
 /*      --------------------------------------------------- Micrium uC Probe Enable/Disable  ---------------------------------------- */
-#define MOTORSUITE_GUI_OSCILLOSCOPE               ENABLED                                   /*1. ENABLED       2. DISABLED (Disable Probe Sampling in PWM irq )*/
+#define MOTORSUITE_GUI_OSCILLOSCOPE               DISABLED                                  /* F1 port: was ENABLED. No Motor Suite GUI; removes ProbeScope_Sampling() from every control ISR.
+                                                                                               1. ENABLED       2. DISABLED (Disable Probe Sampling in PWM irq )*/
+
+/*      --------------------------------------------------- F1 port: bench/debug switches (1 = on, 0 = off) ---------------------------------------- */
+#define F1_FIX_BIAS_SWAP                          (1U)   /* F1 port: 1 = Iu bias from U result, Iw bias from W result (fix).
+                                                            0 = original XMC44 code (Iu bias filtered from W result, Iw from U). A/B in Phase 5.3. */
+#define F1_ISR_TIMING_PIN                         (1U)   /* F1 port: 1 = TEST_PIN (P3.0) high for the duration of pmsm_foc_controlloop_isr().
+                                                            ISR load = duty = V_avg(P3.0) / VDDP. Set 0 for production timing. */
 
 /*      --------------------------------------------------- Reference Speed Adjustment Method ---------------------------------------- */
 #define SETTING_TARGET_SPEED                        SET_TARGET_SPEED                               /*1. SET_TARGET_SPEED
@@ -190,6 +201,15 @@
 #define MCUCARD_TYPE_PATH                                 "Controller_Card/pmsm_foc_KIT_XMC4400_DC_V1.h"
 #define INVERTERCARD_TYPE                                 KIT_MOTOR_DC_250W_24V
 #define INVERTERCARD_TYPE_PATH                            "Inverter_Card/pmsm_foc_KIT_MOTOR_DC_250W_24V.h"
+#define MOTOR_TYPE                                        NANOTEC_MOTOR_DB42S03
+#define MOTOR_TYPE_PATH                                   "PMSM_FOC/Configuration/Motors/pmsm_foc_motor_NANOTEC_MOTOR_DB42S03.h"
+#elif(PMSM_FOC_HARDWARE_KIT == KIT_XMC4400_EVAL_48V20A_GAN)
+/* F1 port: KIT_XMC4400_DC_V1 drive card on EVAL_MTR_48V20A_GAN (UG154954). Pin map unchanged (Controller_Card header).
+   Motor header is a placeholder: no motor is connected yet. */
+#define MCUCARD_TYPE                                      KIT_XMC4400_DC_V1
+#define MCUCARD_TYPE_PATH                                 "Controller_Card/pmsm_foc_KIT_XMC4400_DC_V1.h"
+#define INVERTERCARD_TYPE                                 EVAL_MTR_48V20A_GAN
+#define INVERTERCARD_TYPE_PATH                            "Inverter_Card/pmsm_foc_EVAL_MTR_48V20A_GAN.h"
 #define MOTOR_TYPE                                        NANOTEC_MOTOR_DB42S03
 #define MOTOR_TYPE_PATH                                   "PMSM_FOC/Configuration/Motors/pmsm_foc_motor_NANOTEC_MOTOR_DB42S03.h"
 #elif(PMSM_FOC_HARDWARE_KIT == KIT_XMC13_AK_MOTOR_001)

@@ -64,7 +64,8 @@
 const XMC_GPIO_CONFIG_t IO_PadConfig_Pushpull  =
 {
   .mode            = (XMC_GPIO_MODE_t)XMC_GPIO_MODE_OUTPUT_PUSH_PULL,
-  .output_level    = (XMC_GPIO_OUTPUT_LEVEL_t)ENABLE_LEVEL,
+  .output_level    = (XMC_GPIO_OUTPUT_LEVEL_t)DISABLE_LEVEL,  /* F1 port: was ENABLE_LEVEL. Gate driver off at boot;
+                                                                pmsm_foc_enable_inverter() enables it on start. */
 
 #if(UC_FAMILY == XMC1)
   .input_hysteresis= XMC_GPIO_INPUT_HYSTERESIS_STANDARD
@@ -86,18 +87,21 @@ void pmsm_foc_gpio_init(void)
 
     // P0.11 as gate driver enable pin
     XMC_GPIO_Init(INVERTER_EN_PIN, &IO_PadConfig_Pushpull);
-    // P0.0 ALT5 CCU80.OUT00
-    XMC_GPIO_SetMode(PHASE_U_HS_PIN, PHASE_U_HS_ALT_SELECT);
-    // P0.1 ALT5 CCU80.OUT01
-    XMC_GPIO_SetMode(PHASE_U_LS_PIN, PHASE_U_LS_ALT_SELECT);
-    // P0.2 ALT7 CCU80.OUT10
-    XMC_GPIO_SetMode(PHASE_V_HS_PIN, PHASE_V_HS_ALT_SELECT);
-    // P0.3 ALT7 CCU80.OUT11
-    XMC_GPIO_SetMode(PHASE_V_LS_PIN, PHASE_V_LS_ALT_SELECT);
-    // P0.8 ALT5 CCU80.OUT20
-    XMC_GPIO_SetMode(PHASE_W_HS_PIN, PHASE_W_HS_ALT_SELECT);
-    // P0.9 ALT5 CCU80.OUT21
-    XMC_GPIO_SetMode(PHASE_W_LS_PIN, PHASE_W_LS_ALT_SELECT);
+    /* F1 port: PWM pins boot as GPIO push-pull LOW (all six switches off), not as CCU8 ALT outputs,
+       so the gate inputs never see CCU8 idle/compare states before a start request.
+       pmsm_foc_enable_inverter() (EN_INVERTER_BOOTSTRAP state) selects PHASE_x_xS_ALT_SELECT. */
+    XMC_GPIO_SetOutputLow(PHASE_U_HS_PIN);
+    XMC_GPIO_SetOutputLow(PHASE_U_LS_PIN);
+    XMC_GPIO_SetOutputLow(PHASE_V_HS_PIN);
+    XMC_GPIO_SetOutputLow(PHASE_V_LS_PIN);
+    XMC_GPIO_SetOutputLow(PHASE_W_HS_PIN);
+    XMC_GPIO_SetOutputLow(PHASE_W_LS_PIN);
+    XMC_GPIO_SetMode(PHASE_U_HS_PIN, XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    XMC_GPIO_SetMode(PHASE_U_LS_PIN, XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    XMC_GPIO_SetMode(PHASE_V_HS_PIN, XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    XMC_GPIO_SetMode(PHASE_V_LS_PIN, XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    XMC_GPIO_SetMode(PHASE_W_HS_PIN, XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+    XMC_GPIO_SetMode(PHASE_W_LS_PIN, XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
     // P0.12 as CCU80 Trap input, internal pull-up
 #if CCU8_INPUT_TRAP_LEVEL == XMC_CCU8_SLICE_EVENT_LEVEL_SENSITIVITY_ACTIVE_LOW
     XMC_GPIO_SetMode(TRAP_PIN, XMC_GPIO_MODE_INPUT_PULL_UP);

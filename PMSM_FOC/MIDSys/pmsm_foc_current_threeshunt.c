@@ -96,12 +96,24 @@ void pmsm_foc_get_current_bias(void)
     I2 = VADC_I2_GROUP->RES[VADC_I2_RESULT_REG];
     I3 = VADC_I3_GROUP->RES[VADC_I3_RESULT_REG];
     #endif
+  #if((UC_SERIES == XMC44) && (F1_FIX_BIAS_SWAP == 1U))
+    /* F1 port: on XMC44, I1/I2/I3 are the fixed U/V/W result registers (lines above), and
+       pmsm_foc_get_adcphasecurrent() reads U into ADC_Iu directly. The original code filtered Iu bias
+       from I3 (W) and Iw bias from I1 (U), so I_U = Bias(W) - ADC(U). Match bias to its own phase. */
+    /* Read Iu ADC bias */
+    ADC.ADC_Bias_Iu = (uint32_t) ((ADC.ADC_Bias_Iu * (((uint32_t) 1 << SHIFT_BIAS_LPF) - 1U)) + I1) >> SHIFT_BIAS_LPF;
+    /* Read Iv ADC bias */
+    ADC.ADC_Bias_Iv = (uint32_t) ((ADC.ADC_Bias_Iv * (((uint32_t) 1 << SHIFT_BIAS_LPF) - 1U)) + I2) >> SHIFT_BIAS_LPF;
+    /* Read Iw ADC bias */
+    ADC.ADC_Bias_Iw = (uint32_t) ((ADC.ADC_Bias_Iw * (((uint32_t) 1 << SHIFT_BIAS_LPF) - 1U)) + I3) >> SHIFT_BIAS_LPF;
+  #else
     /* Read Iu ADC bias */
     ADC.ADC_Bias_Iu = (uint32_t) ((ADC.ADC_Bias_Iu * (((uint32_t) 1 << SHIFT_BIAS_LPF) - 1U)) + I3) >> SHIFT_BIAS_LPF;
     /* Read Iv ADC bias */
     ADC.ADC_Bias_Iv = (uint32_t) ((ADC.ADC_Bias_Iv * (((uint32_t) 1 << SHIFT_BIAS_LPF) - 1U)) + I2) >> SHIFT_BIAS_LPF;
     /* Read Iw ADC bias */
     ADC.ADC_Bias_Iw = (uint32_t) ((ADC.ADC_Bias_Iw * (((uint32_t) 1 << SHIFT_BIAS_LPF) - 1U)) + I1) >> SHIFT_BIAS_LPF;
+  #endif
 
 #elif (CURRENT_SENSING ==  USER_THREE_SHUNT_ASSYNC_CONV)
     ADC.ADC_Bias_Iu = XMC_VADC_GROUP_GetResult(VADC_IU_GROUP,VADC_IU_RESULT_REG);

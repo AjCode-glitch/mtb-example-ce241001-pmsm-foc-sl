@@ -89,6 +89,9 @@ void pmsm_foc_secondaryloop_isr(void);
 
 __RAM_FUNC void pmsm_foc_controlloop_isr(void)
 {
+#if (F1_ISR_TIMING_PIN == 1U)
+  XMC_GPIO_SetOutputHigh(TEST_PIN);   /* F1 port: ISR timing start (P3.0). Excludes entry latency. */
+#endif
    switch (Motor.State)
     {
 
@@ -234,6 +237,9 @@ __RAM_FUNC void pmsm_foc_controlloop_isr(void)
       }
 #if (MOTORSUITE_GUI_OSCILLOSCOPE == ENABLED)
 ProbeScope_Sampling();
+#endif
+#if (F1_ISR_TIMING_PIN == 1U)
+  XMC_GPIO_SetOutputLow(TEST_PIN);    /* F1 port: ISR timing end (P3.0). */
 #endif
 }
 

@@ -98,6 +98,7 @@
 #define   IFX_MADK_EVAL_M1_CM610N3                  (10U)
 #define   KIT_XMC4400_EXAGON                        (11U)
 #define   KIT_XMC4400_ISOLATED                      (12U)
+#define   KIT_XMC4400_EVAL_48V20A_GAN               (13U)   /* F1 port: KIT_XMC4400_DC_V1 + EVAL_MTR_48V20A_GAN */
 
 /* MCU Card. Refer to the header file description above */
 #define   KIT_XMC13_BOOT_001                        (1U)
@@ -125,6 +126,8 @@
 #define   EVAL_M1_05F310                            (9U)
 #define   EVAL_M1_CM610N3                           (10U)
 #define   KIT_XMC4X_MOT_GPDLV_001                   (11U)
+#define   EVAL_MTR_48V20A_GAN                       (12U)   /* F1 port: GaN 48 V / 20 A eval board (UG154954). Not 11:
+                                                               mcuinit.c tests INVERTERCARD_TYPE == KIT_XMC4X_MOT_GPDLV_001 (DAC init). */
 
 /* Motor Type. Refer to the header file description above  */
 #define  VORNADO_FAN_MOTOR                          (3U)

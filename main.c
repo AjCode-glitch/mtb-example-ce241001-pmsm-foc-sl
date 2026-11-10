@@ -137,7 +137,14 @@ void pmsm_foc_secondaryloop_callback(){
   }
   else if (!motor_request_start & !motor_off )
   {
+#if (MY_FOC_CONTROL_SCHEME == SPEED_CONTROLLED_VF_ONLY)
+    /* F1 port: V/F-only build has no FOC_CLOSED_LOOP_BRAKE case in the control ISR, so brake never
+       stopped the PWM. MOTOR_STOP disables the inverter, zeroes speed, then goes to MOTOR_IDLE.
+       NOTE: from TRAP_PROTECTION this also runs pmsm_foc_Clear_trap() + full pmsm_foc_init(). */
+    pmsm_foc_motor_stop();
+#else
     pmsm_foc_motor_brake();
+#endif
     motor_off = true;
   }
   Vdc_link = pmsm_foc_get_Vdc_link();

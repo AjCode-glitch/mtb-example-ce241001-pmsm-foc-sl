@@ -121,7 +121,8 @@ extern uint32_t g_mcu_reset_status;
 * ----------------------------------------------------------*/
 void pmsm_foc_motor_start(void)
 {
-  if((Motor.State != TRAP_PROTECTION) || (Motor.State != DCLINK_OVER_VOLTAGE)|| (Motor.State != DCLINK_UNDER_VOLTAGE))
+  /* F1 port: was '||', which is always true, so a start request could leave a fault state. */
+  if((Motor.State != TRAP_PROTECTION) && (Motor.State != DCLINK_OVER_VOLTAGE) && (Motor.State != DCLINK_UNDER_VOLTAGE))
   {
     Motor.State = EN_INVERTER_BOOTSTRAP;
   }
@@ -770,12 +771,21 @@ float_t pmsm_foc_get_Vdc_link(void){
 void pmsm_foc_disable_inverter(void){
 
   XMC_GPIO_SetOutputLevel(INVERTER_EN_PIN, DISABLE_LEVEL); /* Disable gate driver. */
-  XMC_GPIO_SetMode(PHASE_U_HS_PIN, XMC_GPIO_MODE_INPUT_TRISTATE);
-  XMC_GPIO_SetMode(PHASE_U_LS_PIN, XMC_GPIO_MODE_INPUT_TRISTATE);
-  XMC_GPIO_SetMode(PHASE_V_HS_PIN, XMC_GPIO_MODE_INPUT_TRISTATE);
-  XMC_GPIO_SetMode(PHASE_V_LS_PIN, XMC_GPIO_MODE_INPUT_TRISTATE);
-  XMC_GPIO_SetMode(PHASE_W_HS_PIN, XMC_GPIO_MODE_INPUT_TRISTATE);
-  XMC_GPIO_SetMode(PHASE_W_LS_PIN, XMC_GPIO_MODE_INPUT_TRISTATE);
+  /* F1 port: never float the GaN PWM inputs. Was INPUT_TRISTATE; now latch the output register LOW
+     first, then hand the pin from CCU8 (ALT3) to GPIO push-pull, so every gate input is driven to 0 V
+     (EVAL_MTR_48V20A_GAN PWM inputs are active high). pmsm_foc_enable_inverter() re-selects ALT3. */
+  XMC_GPIO_SetOutputLow(PHASE_U_HS_PIN);
+  XMC_GPIO_SetOutputLow(PHASE_U_LS_PIN);
+  XMC_GPIO_SetOutputLow(PHASE_V_HS_PIN);
+  XMC_GPIO_SetOutputLow(PHASE_V_LS_PIN);
+  XMC_GPIO_SetOutputLow(PHASE_W_HS_PIN);
+  XMC_GPIO_SetOutputLow(PHASE_W_LS_PIN);
+  XMC_GPIO_SetMode(PHASE_U_HS_PIN, XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+  XMC_GPIO_SetMode(PHASE_U_LS_PIN, XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+  XMC_GPIO_SetMode(PHASE_V_HS_PIN, XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+  XMC_GPIO_SetMode(PHASE_V_LS_PIN, XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+  XMC_GPIO_SetMode(PHASE_W_HS_PIN, XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+  XMC_GPIO_SetMode(PHASE_W_LS_PIN, XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
   Motor.Inverter_status = 0;
 
 }
